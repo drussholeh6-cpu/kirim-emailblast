@@ -1,0 +1,25 @@
+{
+  "name": "email-blast",
+  "version": "1.0.0",
+  "description": "MailBlast adalah antarmuka demo untuk mengelola kontak, menyusun template email, dan mensimulasikan pengiriman massal. Backend opsional menyediakan endpoint untuk mengirim email melalui Resend.",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/drussholeh6-cpu/kirim-emailblast.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/drussholeh6-cpu/kirim-emailblast/issues"
+  },
+  "homepage": "https://github.com/drussholeh6-cpu/kirim-emailblast#readme",
+  "dependencies": {
+    "resend": "^6.30.0"
+  }
+}
