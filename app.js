@@ -262,10 +262,58 @@
             showToast('Template email berhasil disimpan!');
         }
 
-        function sendTestEmail() {
+        async function sendTestEmail() {
             const target = document.getElementById('test-email-input').value;
             if (!target) { showToast('Masukkan alamat email tujuan uji coba!'); return; }
-            showToast(`Simulasi email uji coba dikirim ke ${target}`);
+
+            try {
+                const response = await submitEmailBatch([{ email: target, name: '', company: '' }]);
+                if (response.results[0]?.status === 'success') {
+                    showToast(`Email uji coba berhasil dikirim ke ${target}`);
+                } else {
+                    showToast('Email uji coba gagal dikirim. Periksa konfigurasi backend.');
+                }
+            } catch (error) {
+                showToast(error.message || 'Backend tidak dapat dihubungi.');
+            }
+        }
+
+        async function submitEmailBatch(recipients) {
+            const response = await fetch('/api/send-email', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    recipients,
+                    subject: document.getElementById('tpl-subject').value,
+                    htmlContent: document.getElementById('tpl-body').value,
+                    senderName: document.getElementById('tpl-sender-name').value,
+                    replyTo: document.getElementById('tpl-reply-to').value
+                })
+            });
+            const result = await response.json().catch(() => ({}));
+
+            if (!response.ok) {
+                throw new Error(result.error || 'Pengiriman email gagal.');
+            }
+
+            return result;
+        }
+
+        function personalizeTemplate(value, recipient) {
+            const names = (recipient.name || '').trim().split(/\s+/);
+            const replacements = {
+                nama_depan: names[0] || '',
+                nama_belakang: names.slice(1).join(' '),
+                perusahaan: recipient.company || '',
+                email: recipient.email,
+                tanggal: new Date().toLocaleDateString('id-ID', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                })
+            };
+
+            return value.replace(/{{(nama_depan|nama_belakang|perusahaan|email|tanggal)}}/g, (_, key) => replacements[key]);
         }
 
         // --- SIMULATOR ENGINE PENGIRIMAN MASSAL ---
@@ -290,6 +338,10 @@
                 return;
             }
 
+            if (!window.confirm(`Kampanye ini akan mengirim email nyata kepada ${targetList.length} penerima. Lanjutkan?`)) {
+                return;
+            }
+
             state.simulation.queue = [...targetList];
             state.simulation.currentIndex = 0;
             state.simulation.total = targetList.length;
@@ -303,7 +355,7 @@
             runDispatchTick();
         }
 
-        function runDispatchTick() {
+        async function runDispatchTick() {
             if (!state.simulation.running || state.simulation.paused) return;
 
             const batchSize = parseInt(document.getElementById('sim-batch-size').value) || 3;
@@ -316,18 +368,28 @@
                 return;
             }
 
-            batch.forEach(recipient => {
-                const isSuccess = Math.random() > 0.08; // 92% rasio keberhasilan simulasi
-                const statusCode = isSuccess ? 200 : 502;
-                const statusStr = isSuccess ? 'Delivered' : 'Failed';
+            let results = [];
+            let batchError = '';
+            try {
+                const response = await submitEmailBatch(batch);
+                results = response.results || [];
+            } catch (error) {
+                batchError = error.message;
+            }
+
+            let failedCount = 0;
+            batch.forEach((recipient, index) => {
+                const isSuccess = results[index]?.status === 'success';
+                const statusCode = isSuccess ? 200 : 500;
+                const statusStr = isSuccess ? 'Sent' : 'Failed';
 
                 if (isSuccess) state.simulation.successCount++;
+                else failedCount++;
 
-                const today = new Date().toLocaleDateString('id-ID');
                 const logEntry = {
                     timestamp: new Date().toLocaleTimeString('id-ID'),
                     email: recipient.email,
-                    subject: state.template.subject.replace('{{nama_depan}}', recipient.name).replace('{{perusahaan}}', recipient.company),
+                    subject: personalizeTemplate(document.getElementById('tpl-subject').value, recipient),
                     status: statusStr,
                     code: statusCode
                 };
@@ -336,6 +398,10 @@
                 appendTerminalLog(logEntry);
             });
 
+            if (failedCount > 0) {
+                showToast(batchError || `${failedCount} email gagal dikirim. Periksa log dan konfigurasi backend.`);
+            }
+
             state.simulation.currentIndex += batch.length;
             updateProgressMetrics();
 
@@ -343,9 +409,11 @@
             renderAnalyticsLogs();
             updateDashboardStats();
 
-            state.simulation.intervalId = setTimeout(() => {
-                runDispatchTick();
-            }, delaySec * 1000);
+            if (state.simulation.running && !state.simulation.paused) {
+                state.simulation.intervalId = setTimeout(() => {
+                    runDispatchTick();
+                }, delaySec * 1000);
+            }
         }
 
         function pauseDispatchSimulation() {
@@ -368,7 +436,7 @@
             state.simulation.running = false;
             showSendingBadge(false);
             updateSimUI('SELESAI');
-            showToast('Seluruh batch pengiriman email massal berhasil diselesaikan!');
+            showToast(`Kampanye selesai: ${state.simulation.successCount} dari ${state.simulation.total} email diterima provider.`);
             appendTerminalLog({ timestamp: new Date().toLocaleTimeString('id-ID'), email: 'SISTEM', status: 'SELESAI - Semua email diproses', code: 200 });
         }
 
@@ -447,7 +515,7 @@
                     <td class="p-3.5 text-slate-300 truncate max-w-xs">${l.subject}</td>
                     <td class="p-3.5">
                         <span class="px-2 py-0.5 rounded text-[10px] font-semibold ${
-                            l.status === 'Delivered' ? 'bg-emerald-950 text-emerald-400 border border-emerald-800/50' : 'bg-rose-950 text-rose-400 border border-rose-800/50'
+                            ['Sent', 'Delivered'].includes(l.status) ? 'bg-emerald-950 text-emerald-400 border border-emerald-800/50' : 'bg-rose-950 text-rose-400 border border-rose-800/50'
                         }">${l.status}</span>
                     </td>
                     <td class="p-3.5 font-mono text-slate-400">${l.code}</td>
@@ -492,7 +560,7 @@
             const failedLogs = state.logs.filter(l => l.status === 'Failed').length;
             document.getElementById('stat-failed-count').innerText = failedLogs;
 
-            const successLogs = state.logs.filter(l => l.status === 'Delivered').length;
+            const successLogs = state.logs.filter(l => ['Sent', 'Delivered'].includes(l.status)).length;
             const rate = state.logs.length > 0 ? Math.round((successLogs / state.logs.length) * 100) : 100;
             document.getElementById('stat-delivery-rate').innerText = `${rate}%`;
 
@@ -507,7 +575,7 @@
             recentContainer.innerHTML = recent.map(r => `
                 <div class="flex justify-between items-center bg-slate-950 p-2.5 rounded-lg border border-slate-800">
                     <div class="flex items-center gap-2">
-                        <span class="w-1.5 h-1.5 rounded-full ${r.status === 'Delivered' ? 'bg-emerald-400' : 'bg-rose-400'}"></span>
+                        <span class="w-1.5 h-1.5 rounded-full ${['Sent', 'Delivered'].includes(r.status) ? 'bg-emerald-400' : 'bg-rose-400'}"></span>
                         <span class="font-medium text-slate-300">${r.email}</span>
                     </div>
                     <span class="text-slate-500 text-[10px] font-mono">${r.timestamp}</span>
@@ -558,14 +626,6 @@
                     plugins: { legend: { position: 'bottom', labels: { color: '#94a3b8', boxWidth: 12 } } }
                 }
             });
-        }
-
-        function saveSettings() {
-            showToast('Konfigurasi SMTP/API berhasil diperbarui!');
-        }
-
-        function testSmtpConnection() {
-            showToast('Menguji koneksi server SMTP... [Sistem OK]');
         }
 
         // --- SYSTEM TOAST NOTIFICATIONS ---

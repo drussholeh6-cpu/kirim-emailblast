@@ -20,6 +20,7 @@
   },
   "homepage": "https://github.com/drussholeh6-cpu/kirim-emailblast#readme",
   "dependencies": {
+    "express": "^5.2.1",
     "resend": "^6.30.0"
   }
 }

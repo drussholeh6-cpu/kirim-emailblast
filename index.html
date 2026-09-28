@@ -410,7 +410,8 @@
                             <input type="text" id="log-search" onkeyup="renderAnalyticsLogs()" placeholder="Cari berdasarkan email/subjek..." class="bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-slate-200 w-64 focus:outline-none">
                             <select id="log-filter-status" onchange="renderAnalyticsLogs()" class="bg-slate-950 border border-slate-800 text-slate-300 text-xs rounded-lg px-3 py-1.5">
                                 <option value="all">Semua Status</option>
-                                <option value="Delivered">Terkirim (200 OK)</option>
+                                <option value="Sent">Diterima provider (Sent)</option>
+                                <option value="Delivered">Delivered</option>
                                 <option value="Failed">Gagal (Error)</option>
                             </select>
                         </div>
@@ -450,45 +451,13 @@
                 <div id="view-settings" class="tab-view hidden space-y-6 max-w-3xl">
                     <div class="bg-slate-900 border border-slate-800 p-6 rounded-xl space-y-5">
                         <div>
-                            <h3 class="text-base font-semibold text-slate-200">Konfigurasi Gateway Email & SMTP</h3>
-                            <p class="text-xs text-slate-400 mt-1">Atur kredensial layanan provider asli atau gunakan mode simulasi internal.</p>
+                            <h3 class="text-base font-semibold text-slate-200">Konfigurasi Gateway Email</h3>
+                            <p class="text-xs text-slate-400 mt-1">Pengiriman email menggunakan Resend melalui backend.</p>
                         </div>
 
-                        <div class="space-y-4 text-xs">
-                            <div>
-                                <label class="block text-slate-400 mb-1">Layanan Provider Email</label>
-                                <select id="cfg-provider" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-200">
-                                    <option value="simulator">Engine Simulasi Mock (Default)</option>
-                                    <option value="resend">Resend API</option>
-                                    <option value="sendgrid">SendGrid API</option>
-                                    <option value="smtp">Custom SMTP Server</option>
-                                </select>
-                            </div>
-
-                            <div>
-                                <label class="block text-slate-400 mb-1">API Key / Secret Token</label>
-                                <input type="password" id="cfg-api-key" value="re_123456789_mock_key_sample" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-200">
-                            </div>
-
-                            <div class="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label class="block text-slate-400 mb-1">SMTP Host Server</label>
-                                    <input type="text" id="cfg-smtp-host" placeholder="smtp.mailgun.org" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-200">
-                                </div>
-                                <div>
-                                    <label class="block text-slate-400 mb-1">Port SMTP</label>
-                                    <input type="text" id="cfg-smtp-port" placeholder="587" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-200">
-                                </div>
-                            </div>
-
-                            <div class="pt-3 border-t border-slate-800 flex justify-between items-center">
-                                <button onclick="testSmtpConnection()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 px-3.5 py-2 rounded-lg font-medium transition border border-slate-700">
-                                    Uji Koneksi Server
-                                </button>
-                                <button onclick="saveSettings()" class="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-lg font-medium transition">
-                                    Simpan Konfigurasi
-                                </button>
-                            </div>
+                        <div class="space-y-3 text-xs text-slate-300">
+                            <p>Atur <code>RESEND_API_KEY</code>, <code>RESEND_FROM_EMAIL</code>, dan opsional <code>RESEND_FROM_NAME</code> di environment server atau hosting.</p>
+                            <p class="text-slate-400">API key tidak disimpan atau dikirim dari browser. Alamat pengirim harus memakai domain yang diverifikasi di Resend.</p>
                         </div>
                     </div>
                 </div>
