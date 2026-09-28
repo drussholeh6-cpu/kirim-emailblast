@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="id" class="h-full bg-slate-950 text-slate-100">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MailBlast - Simulator & Manajemen Email Massal</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="./tailwind.config.js"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./styles.css">
+</head>
+<body class="h-full flex flex-col overflow-hidden bg-slate-950 text-slate-100 antialiased selection:bg-blue-600 selection:text-white">
+
+    <div id="app" class="flex h-screen overflow-hidden">
+        
+        <!-- Sidebar Navigation -->
+        <aside class="w-64 bg-slate-900 border-r border-slate-800 flex flex-col justify-between hidden md:flex shrink-0">
+            <div>
+                <!-- Logo -->
+                <div class="h-16 flex items-center px-6 border-b border-slate-800 gap-3">
+                    <div class="p-2 bg-gradient-to-tr from-blue-600 to-indigo-500 rounded-xl shadow-lg shadow-blue-500/20 text-white">
+                        <i data-lucide="send" class="w-5 h-5"></i>
+                    </div>
+                    <div>
+                        <h1 class="font-bold text-lg leading-tight tracking-wide text-white">MailBlast</h1>
+                        <p class="text-[10px] text-slate-400 font-medium tracking-wider uppercase">Engine Email Massal</p>
+                    </div>
+                </div>
+
+                <!-- Navigation Links -->
+                <nav class="p-4 space-y-1.5">
+                    <button onclick="switchTab('dashboard')" id="nav-dashboard" class="nav-btn w-full flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-sm font-medium transition-all text-slate-400 hover:text-white hover:bg-slate-800/60">
+                        <i data-lucide="layout-dashboard" class="w-4 h-4"></i> Dashboard
+                    </button>
+                    <button onclick="switchTab('contacts')" id="nav-contacts" class="nav-btn w-full flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-sm font-medium transition-all text-slate-400 hover:text-white hover:bg-slate-800/60">
+                        <i data-lucide="users" class="w-4 h-4"></i> Daftar Kontak
+                    </button>
+                    <button onclick="switchTab('campaigns')" id="nav-campaigns" class="nav-btn w-full flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-sm font-medium transition-all text-slate-400 hover:text-white hover:bg-slate-800/60">
+                        <i data-lucide="file-text" class="w-4 h-4"></i> Template Email
+                    </button>
+                    <button onclick="switchTab('dispatch')" id="nav-dispatch" class="nav-btn w-full flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-sm font-medium transition-all text-slate-400 hover:text-white hover:bg-slate-800/60 relative">
+                        <i data-lucide="rocket" class="w-4 h-4"></i> Simulator Pengiriman
+                        <span id="sending-badge" class="hidden absolute right-3 top-1/2 -translate-y-1/2 flex h-2 w-2">
+                          <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                          <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                        </span>
+                    </button>
+                    <button onclick="switchTab('analytics')" id="nav-analytics" class="nav-btn w-full flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-sm font-medium transition-all text-slate-400 hover:text-white hover:bg-slate-800/60">
+                        <i data-lucide="bar-chart-3" class="w-4 h-4"></i> Laporan & Log
+                    </button>
+                    <button onclick="switchTab('settings')" id="nav-settings" class="nav-btn w-full flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-sm font-medium transition-all text-slate-400 hover:text-white hover:bg-slate-800/60">
+                        <i data-lucide="settings" class="w-4 h-4"></i> Konfigurasi SMTP/API
+                    </button>
+                    <button onclick="switchTab('guide')" id="nav-guide" class="nav-btn w-full flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-sm font-medium transition-all text-slate-400 hover:text-white hover:bg-slate-800/60">
+                        <i data-lucide="book-open" class="w-4 h-4"></i> Panduan Arsitektur
+                    </button>
+                </nav>
+            </div>
+
+            <!-- Footer / System Status -->
+            <div class="p-4 border-t border-slate-800/80 bg-slate-900/50">
+                <div class="bg-slate-950 p-3 rounded-lg border border-slate-800/80 flex items-center justify-between">
+                    <div class="flex items-center gap-2">
+                        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                        <span class="text-xs text-slate-300 font-medium">Engine Siap</span>
+                    </div>
+                    <span class="text-[10px] bg-blue-950 text-blue-400 px-2 py-0.5 rounded font-mono border border-blue-800/50">v2.5-ID</span>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Workspace -->
+        <main class="flex-1 flex flex-col min-w-0 overflow-hidden bg-slate-950">
+            
+            <!-- Top App Bar -->
+            <header class="h-16 border-b border-slate-800 px-6 flex items-center justify-between bg-slate-900/60 backdrop-blur-md shrink-0">
+                <div class="flex items-center gap-3">
+                    <button onclick="toggleMobileMenu()" class="md:hidden text-slate-400 hover:text-white p-1">
+                        <i data-lucide="menu" class="w-6 h-6"></i>
+                    </button>
+                    <h2 id="page-title" class="text-lg font-semibold text-white">Ringkasan Dashboard</h2>
+                </div>
+
+                <div class="flex items-center gap-3">
+                    <button onclick="switchTab('dispatch')" class="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white px-3.5 py-1.5 rounded-lg text-sm font-medium shadow-md shadow-blue-600/20 transition flex items-center gap-2">
+                        <i data-lucide="play" class="w-4 h-4"></i>
+                        <span class="hidden sm:inline">Luncurkan Kampanye</span>
+                    </button>
+                </div>
+            </header>
+
+            <div class="flex-1 overflow-y-auto p-4 md:p-6 space-y-6" id="main-content">
+
+                <!-- 1. DASHBOARD VIEW -->
+                <div id="view-dashboard" class="tab-view space-y-6">
+                    <!-- Key Stats Grid -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                        <div class="bg-slate-900 border border-slate-800 p-5 rounded-xl flex items-center justify-between">
+                            <div>
+                                <p class="text-xs font-medium text-slate-400">Total Kontak</p>
+                                <h3 id="stat-contacts-count" class="text-2xl font-bold text-white mt-1">0</h3>
+                                <p class="text-xs text-emerald-400 mt-1 flex items-center gap-1">
+                                    <i data-lucide="user-check" class="w-3 h-3"></i> Kontak Aktif
+                                </p>
+                            </div>
+                            <div class="p-3 bg-blue-500/10 text-blue-400 rounded-xl border border-blue-500/20">
+                                <i data-lucide="users" class="w-6 h-6"></i>
+                            </div>
+                        </div>
+
+                        <div class="bg-slate-900 border border-slate-800 p-5 rounded-xl flex items-center justify-between">
+                            <div>
+                                <p class="text-xs font-medium text-slate-400">Total Terkirim</p>
+                                <h3 id="stat-sent-count" class="text-2xl font-bold text-white mt-1">0</h3>
+                                <p class="text-xs text-slate-400 mt-1">Semua eksekusi</p>
+                            </div>
+                            <div class="p-3 bg-indigo-500/10 text-indigo-400 rounded-xl border border-indigo-500/20">
+                                <i data-lucide="send" class="w-6 h-6"></i>
+                            </div>
+                        </div>
+
+                        <div class="bg-slate-900 border border-slate-800 p-5 rounded-xl flex items-center justify-between">
+                            <div>
+                                <p class="text-xs font-medium text-slate-400">Tingkat Keberhasilan</p>
+                                <h3 id="stat-delivery-rate" class="text-2xl font-bold text-emerald-400 mt-1">100%</h3>
+                                <p class="text-xs text-slate-400 mt-1">Sistem Simulasi</p>
+                            </div>
+                            <div class="p-3 bg-emerald-500/10 text-emerald-400 rounded-xl border border-emerald-500/20">
+                                <i data-lucide="check-circle-2" class="w-6 h-6"></i>
+                            </div>
+                        </div>
+
+                        <div class="bg-slate-900 border border-slate-800 p-5 rounded-xl flex items-center justify-between">
+                            <div>
+                                <p class="text-xs font-medium text-slate-400">Pengiriman Gagal</p>
+                                <h3 id="stat-failed-count" class="text-2xl font-bold text-rose-400 mt-1">0</h3>
+                                <p class="text-xs text-slate-400 mt-1">Gagal/Bounced</p>
+                            </div>
+                            <div class="p-3 bg-rose-500/10 text-rose-400 rounded-xl border border-rose-500/20">
+                                <i data-lucide="alert-triangle" class="w-6 h-6"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Charts Grid -->
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        <div class="lg:col-span-2 bg-slate-900 border border-slate-800 p-5 rounded-xl">
+                            <div class="flex items-center justify-between mb-4">
+                                <h4 class="font-semibold text-slate-200 text-sm">Grafik Performa Pengiriman</h4>
+                                <span class="text-xs text-slate-400">7 Hari Terakhir</span>
+                            </div>
+                            <div class="h-64">
+                                <canvas id="chart-activity"></canvas>
+                            </div>
+                        </div>
+
+                        <div class="bg-slate-900 border border-slate-800 p-5 rounded-xl">
+                            <div class="flex items-center justify-between mb-4">
+                                <h4 class="font-semibold text-slate-200 text-sm">Distribusi Status</h4>
+                                <i data-lucide="pie-chart" class="w-4 h-4 text-slate-400"></i>
+                            </div>
+                            <div class="h-64 flex items-center justify-center">
+                                <canvas id="chart-breakdown"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Recent Activity -->
+                    <div class="bg-slate-900 border border-slate-800 rounded-xl p-5">
+                        <h4 class="font-semibold text-slate-200 text-sm mb-4">Aktivitas Pengiriman Terbaru</h4>
+                        <div id="dashboard-recent-logs" class="space-y-3 text-xs">
+                            <!-- Populated dynamically -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2. CONTACTS MANAGER VIEW -->
+                <div id="view-contacts" class="tab-view hidden space-y-6">
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-slate-900 p-4 rounded-xl border border-slate-800">
+                        <div class="flex items-center gap-3 w-full sm:w-auto">
+                            <div class="relative flex-1 sm:w-64">
+                                <i data-lucide="search" class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                                <input type="text" id="contact-search" onkeyup="renderContacts()" placeholder="Cari nama, email, perusahaan..." class="w-full bg-slate-950 border border-slate-800 rounded-lg pl-9 pr-3 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-blue-500">
+                            </div>
+                            <select id="contact-filter-status" onchange="renderContacts()" class="bg-slate-950 border border-slate-800 text-slate-300 text-xs rounded-lg px-3 py-1.5 focus:outline-none">
+                                <option value="all">Semua Status</option>
+                                <option value="Subscribed">Subscribed (Aktif)</option>
+                                <option value="Unsubscribed">Unsubscribed</option>
+                                <option value="Bounced">Bounced (Gagal)</option>
+                            </select>
+                        </div>
+
+                        <div class="flex items-center gap-2 w-full sm:w-auto justify-end">
+                            <button onclick="openImportModal()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs px-3 py-2 rounded-lg border border-slate-700 transition flex items-center gap-1.5">
+                                <i data-lucide="upload" class="w-3.5 h-3.5"></i> Impor CSV
+                            </button>
+                            <button onclick="openAddContactModal()" class="bg-blue-600 hover:bg-blue-500 text-white text-xs px-3 py-2 rounded-lg transition flex items-center gap-1.5 font-medium">
+                                <i data-lucide="plus" class="w-3.5 h-3.5"></i> Tambah Kontak
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Contacts Table -->
+                    <div class="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-xs">
+                                <thead class="bg-slate-950 text-slate-400 border-b border-slate-800">
+                                    <tr>
+                                        <th class="p-3.5 font-medium">Penerima</th>
+                                        <th class="p-3.5 font-medium">Perusahaan</th>
+                                        <th class="p-3.5 font-medium">Tag / Kategori</th>
+                                        <th class="p-3.5 font-medium">Status Subscriber</th>
+                                        <th class="p-3.5 font-medium text-right">Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="contacts-table-body" class="divide-y divide-slate-800/60 text-slate-300">
+                                    <!-- Populated dynamically -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 3. EMAIL TEMPLATE BUILDER VIEW -->
+                <div id="view-campaigns" class="tab-view hidden space-y-6">
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                        <!-- Left Editor Panel -->
+                        <div class="lg:col-span-7 bg-slate-900 border border-slate-800 p-5 rounded-xl space-y-4">
+                            <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+                                <h3 class="font-semibold text-slate-200 text-sm">Editor Template Email Massal</h3>
+                                <button onclick="saveCurrentTemplate()" class="text-xs bg-blue-600 hover:bg-blue-500 text-white px-3 py-1.5 rounded-md transition flex items-center gap-1">
+                                    <i data-lucide="save" class="w-3.5 h-3.5"></i> Simpan Template
+                                </button>
+                            </div>
+
+                            <div class="space-y-3 text-xs">
+                                <div>
+                                    <label class="block text-slate-400 mb-1">Subjek Email Kampanye</label>
+                                    <input type="text" id="tpl-subject" value="Selamat Datang di {{perusahaan}}, {{nama_depan}}! 🎉" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-slate-200 focus:outline-none focus:border-blue-500">
+                                </div>
+
+                                <div class="grid grid-cols-2 gap-3">
+                                    <div>
+                                        <label class="block text-slate-400 mb-1">Nama Pengirim (From Name)</label>
+                                        <input type="text" id="tpl-sender-name" value="Tim MailBlast" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-slate-200 focus:outline-none focus:border-blue-500">
+                                    </div>
+                                    <div>
+                                        <label class="block text-slate-400 mb-1">Email Balasan (Reply-To)</label>
+                                        <input type="email" id="tpl-reply-to" value="support@mailblast.id" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-slate-200 focus:outline-none focus:border-blue-500">
+                                    </div>
+                                </div>
+
+                                <!-- Dynamic Tag Inserter -->
+                                <div>
+                                    <label class="block text-slate-400 mb-1">Sisipkan Tag Dinamis (Otomatis mengganti variabel):</label>
+                                    <div class="flex gap-2 flex-wrap">
+                                        <button onclick="insertTag('{{nama_depan}}')" class="bg-slate-800 hover:bg-slate-700 text-blue-400 text-[11px] px-2.5 py-1 rounded border border-slate-700">{{nama_depan}}</button>
+                                        <button onclick="insertTag('{{nama_belakang}}')" class="bg-slate-800 hover:bg-slate-700 text-blue-400 text-[11px] px-2.5 py-1 rounded border border-slate-700">{{nama_belakang}}</button>
+                                        <button onclick="insertTag('{{perusahaan}}')" class="bg-slate-800 hover:bg-slate-700 text-blue-400 text-[11px] px-2.5 py-1 rounded border border-slate-700">{{perusahaan}}</button>
+                                        <button onclick="insertTag('{{email}}')" class="bg-slate-800 hover:bg-slate-700 text-blue-400 text-[11px] px-2.5 py-1 rounded border border-slate-700">{{email}}</button>
+                                        <button onclick="insertTag('{{tanggal}}')" class="bg-slate-800 hover:bg-slate-700 text-blue-400 text-[11px] px-2.5 py-1 rounded border border-slate-700">{{tanggal}}</button>
+                                    </div>
+                                </div>
+
+                                <!-- Body Editor -->
+                                <div>
+                                    <label class="block text-slate-400 mb-1">Konten Email (Format HTML / Rich Text)</label>
+                                    <textarea id="tpl-body" rows="12" oninput="updateLivePreview()" class="w-full font-mono text-xs bg-slate-950 border border-slate-800 rounded-lg p-3 text-slate-300 focus:outline-none focus:border-blue-500 leading-relaxed"></textarea>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Right Live Preview Panel -->
+                        <div class="lg:col-span-5 bg-slate-900 border border-slate-800 p-5 rounded-xl flex flex-col">
+                            <div class="flex justify-between items-center border-b border-slate-800 pb-3 mb-4">
+                                <h3 class="font-semibold text-slate-200 text-sm">Pratinjau Langsung (Live Preview)</h3>
+                                <div class="flex gap-1 bg-slate-950 p-1 rounded-lg border border-slate-800">
+                                    <button onclick="setPreviewMode('desktop')" id="btn-prev-desktop" class="px-2 py-1 text-xs rounded bg-slate-800 text-white">Desktop</button>
+                                    <button onclick="setPreviewMode('mobile')" id="btn-prev-mobile" class="px-2 py-1 text-xs rounded text-slate-400 hover:text-white">Mobile</button>
+                                </div>
+                            </div>
+
+                            <!-- Preview Container -->
+                            <div id="preview-wrapper" class="flex-1 transition-all duration-300 mx-auto w-full max-w-full bg-white rounded-lg shadow-2xl border border-slate-700 overflow-hidden text-slate-900 flex flex-col">
+                                <div class="bg-slate-100 border-b p-3 text-xs border-slate-200 space-y-1 text-slate-600 font-sans">
+                                    <div class="font-bold text-slate-800 text-sm" id="prev-subject-heading">Subjek Email</div>
+                                    <div class="flex justify-between text-[11px]">
+                                        <span>Dari: <strong id="prev-sender-display">Tim MailBlast</strong></span>
+                                        <span class="text-slate-400">Baru saja</span>
+                                    </div>
+                                </div>
+                                <div id="preview-frame" class="p-4 flex-1 overflow-y-auto text-sm">
+                                    <!-- Dynamic content -->
+                                </div>
+                            </div>
+
+                            <!-- Quick Test Sender -->
+                            <div class="mt-4 pt-3 border-t border-slate-800 flex gap-2">
+                                <input type="email" id="test-email-input" placeholder="Masukkan email uji coba..." class="flex-1 bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-slate-200 focus:outline-none">
+                                <button onclick="sendTestEmail()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs px-3 py-1.5 rounded-lg border border-slate-700">Kirim Tes</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 4. BULK DISPATCH SIMULATOR VIEW -->
+                <div id="view-dispatch" class="tab-view hidden space-y-6">
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                        
+                        <!-- Control Sidebar -->
+                        <div class="lg:col-span-5 space-y-6">
+                            <div class="bg-slate-900 border border-slate-800 p-5 rounded-xl space-y-4">
+                                <h3 class="font-semibold text-slate-200 text-sm border-b border-slate-800 pb-3">Konfigurasi Pengiriman Engine</h3>
+                                
+                                <div class="space-y-3 text-xs">
+                                    <div>
+                                        <label class="block text-slate-400 mb-1">Ukuran Batch (Email per Siklus)</label>
+                                        <input type="number" id="sim-batch-size" value="3" min="1" max="50" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-slate-200">
+                                    </div>
+
+                                    <div>
+                                        <label class="block text-slate-400 mb-1">Jeda Interval Pengiriman (Detik)</label>
+                                        <input type="number" id="sim-delay" value="1.5" min="0.5" step="0.5" max="10" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-slate-200">
+                                        <p class="text-[10px] text-slate-500 mt-1">Mencegah server terdeteksi melakukan spamming.</p>
+                                    </div>
+
+                                    <div>
+                                        <label class="block text-slate-400 mb-1">Target Tag Kontak</label>
+                                        <select id="sim-target-tag" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-slate-200">
+                                            <option value="ALL">Semua Kontak Subscribed</option>
+                                            <option value="VIP">Khusus Tag VIP</option>
+                                            <option value="Lead">Khusus Tag Lead</option>
+                                            <option value="Pelanggan">Khusus Tag Pelanggan</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <!-- Buttons -->
+                                <div class="pt-2 space-y-2">
+                                    <button id="btn-start-sim" onclick="startDispatchSimulation()" class="w-full bg-blue-600 hover:bg-blue-500 text-white py-2.5 rounded-lg font-medium text-xs transition flex items-center justify-center gap-2 shadow-lg shadow-blue-600/20">
+                                        <i data-lucide="play" class="w-4 h-4"></i> Mulai Pengiriman Massal
+                                    </button>
+                                    <div class="grid grid-cols-2 gap-2">
+                                        <button id="btn-pause-sim" onclick="pauseDispatchSimulation()" disabled class="bg-slate-800 disabled:opacity-50 hover:bg-slate-700 text-slate-300 py-2 rounded-lg text-xs font-medium border border-slate-700 flex items-center justify-center gap-1.5">
+                                            <i data-lucide="pause" class="w-3.5 h-3.5"></i> Jeda
+                                        </button>
+                                        <button id="btn-stop-sim" onclick="stopDispatchSimulation()" disabled class="bg-rose-950/40 disabled:opacity-50 hover:bg-rose-900/60 text-rose-300 py-2 rounded-lg text-xs font-medium border border-rose-800/50 flex items-center justify-center gap-1.5">
+                                            <i data-lucide="square" class="w-3.5 h-3.5"></i> Batalkan
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Live Dispatch Stats -->
+                            <div class="bg-slate-900 border border-slate-800 p-5 rounded-xl space-y-3">
+                                <h4 class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Metrik Antrean</h4>
+                                <div class="grid grid-cols-2 gap-3 text-center">
+                                    <div class="bg-slate-950 p-3 rounded-lg border border-slate-800">
+                                        <span class="text-xs text-slate-500 block">Terkirim / Total</span>
+                                        <span id="queue-progress-text" class="text-lg font-bold text-slate-200">0 / 0</span>
+                                    </div>
+                                    <div class="bg-slate-950 p-3 rounded-lg border border-slate-800">
+                                        <span class="text-xs text-slate-500 block">Tingkat Berhasil</span>
+                                        <span id="queue-success-rate" class="text-lg font-bold text-emerald-400">100%</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Terminal Stream -->
+                        <div class="lg:col-span-7 bg-slate-900 border border-slate-800 p-5 rounded-xl flex flex-col h-[520px]">
+                            <div class="flex justify-between items-center pb-3 border-b border-slate-800">
+                                <div class="flex items-center gap-2">
+                                    <i data-lucide="terminal" class="w-4 h-4 text-blue-400"></i>
+                                    <h3 class="font-semibold text-slate-200 text-sm">Konsol Streaming Real-time</h3>
+                                </div>
+                                <span id="sim-status-pill" class="text-[10px] bg-slate-800 text-slate-400 px-2 py-0.5 rounded font-mono">STANDBY</span>
+                            </div>
+
+                            <!-- Progress Bar -->
+                            <div class="my-4 space-y-1.5">
+                                <div class="flex justify-between text-xs text-slate-400">
+                                    <span>Kemajuan Pengiriman</span>
+                                    <span id="sim-progress-percent">0%</span>
+                                </div>
+                                <div class="w-full h-2.5 bg-slate-950 rounded-full overflow-hidden border border-slate-800">
+                                    <div id="sim-progress-bar" class="h-full bg-gradient-to-r from-blue-500 to-indigo-500 w-0 transition-all duration-300"></div>
+                                </div>
+                            </div>
+
+                            <!-- Stream Terminal Window -->
+                            <div id="console-terminal" class="flex-1 bg-slate-950 border border-slate-800 rounded-lg p-3 font-mono text-[11px] overflow-y-auto space-y-1.5 leading-relaxed text-slate-300">
+                                <div class="text-slate-500">// Engine diinisialisasi. Menunggu instruksi pengiriman...</div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- 5. ANALYTICS & LOGS VIEW -->
+                <div id="view-analytics" class="tab-view hidden space-y-6">
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-slate-900 p-4 rounded-xl border border-slate-800">
+                        <div class="flex items-center gap-3 w-full sm:w-auto">
+                            <input type="text" id="log-search" onkeyup="renderAnalyticsLogs()" placeholder="Cari berdasarkan email/subjek..." class="bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-slate-200 w-64 focus:outline-none">
+                            <select id="log-filter-status" onchange="renderAnalyticsLogs()" class="bg-slate-950 border border-slate-800 text-slate-300 text-xs rounded-lg px-3 py-1.5">
+                                <option value="all">Semua Status</option>
+                                <option value="Delivered">Terkirim (200 OK)</option>
+                                <option value="Failed">Gagal (Error)</option>
+                            </select>
+                        </div>
+
+                        <div class="flex gap-2">
+                            <button onclick="exportLogs('csv')" class="bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs px-3 py-1.5 rounded-lg border border-slate-700 flex items-center gap-1">
+                                <i data-lucide="download" class="w-3.5 h-3.5"></i> Ekspor CSV
+                            </button>
+                            <button onclick="clearLogs()" class="bg-rose-950/40 hover:bg-rose-900/50 text-rose-300 text-xs px-3 py-1.5 rounded-lg border border-rose-800/40 flex items-center gap-1">
+                                <i data-lucide="trash-2" class="w-3.5 h-3.5"></i> Bersihkan Log
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Logs Table -->
+                    <div class="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-xs">
+                                <thead class="bg-slate-950 text-slate-400 border-b border-slate-800">
+                                    <tr>
+                                        <th class="p-3.5 font-medium">Stempel Waktu</th>
+                                        <th class="p-3.5 font-medium">Penerima</th>
+                                        <th class="p-3.5 font-medium">Subjek Email</th>
+                                        <th class="p-3.5 font-medium">Status Pengiriman</th>
+                                        <th class="p-3.5 font-medium">Kode HTTP</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="analytics-logs-body" class="divide-y divide-slate-800/60 text-slate-300">
+                                    <!-- Dynamic logs -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 6. API & SMTP CONFIG VIEW -->
+                <div id="view-settings" class="tab-view hidden space-y-6 max-w-3xl">
+                    <div class="bg-slate-900 border border-slate-800 p-6 rounded-xl space-y-5">
+                        <div>
+                            <h3 class="text-base font-semibold text-slate-200">Konfigurasi Gateway Email & SMTP</h3>
+                            <p class="text-xs text-slate-400 mt-1">Atur kredensial layanan provider asli atau gunakan mode simulasi internal.</p>
+                        </div>
+
+                        <div class="space-y-4 text-xs">
+                            <div>
+                                <label class="block text-slate-400 mb-1">Layanan Provider Email</label>
+                                <select id="cfg-provider" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-200">
+                                    <option value="simulator">Engine Simulasi Mock (Default)</option>
+                                    <option value="resend">Resend API</option>
+                                    <option value="sendgrid">SendGrid API</option>
+                                    <option value="smtp">Custom SMTP Server</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label class="block text-slate-400 mb-1">API Key / Secret Token</label>
+                                <input type="password" id="cfg-api-key" value="re_123456789_mock_key_sample" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-200">
+                            </div>
+
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-slate-400 mb-1">SMTP Host Server</label>
+                                    <input type="text" id="cfg-smtp-host" placeholder="smtp.mailgun.org" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-200">
+                                </div>
+                                <div>
+                                    <label class="block text-slate-400 mb-1">Port SMTP</label>
+                                    <input type="text" id="cfg-smtp-port" placeholder="587" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-200">
+                                </div>
+                            </div>
+
+                            <div class="pt-3 border-t border-slate-800 flex justify-between items-center">
+                                <button onclick="testSmtpConnection()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 px-3.5 py-2 rounded-lg font-medium transition border border-slate-700">
+                                    Uji Koneksi Server
+                                </button>
+                                <button onclick="saveSettings()" class="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-lg font-medium transition">
+                                    Simpan Konfigurasi
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 7. ARCHITECTURE GUIDE VIEW -->
+                <div id="view-guide" class="tab-view hidden space-y-6 max-w-4xl">
+                    <div class="bg-slate-900 border border-slate-800 p-6 rounded-xl space-y-6">
+                        <div>
+                            <h3 class="text-lg font-bold text-blue-400 flex items-center gap-2">
+                                <i data-lucide="book-open" class="w-5 h-5"></i>
+                                Panduan Arsitektur Email Massal Dunia Nyata
+                            </h3>
+                            <p class="text-xs text-slate-400 mt-1 leading-relaxed">
+                                Karena batasan keamanan peramban (CORS & sertifikat TLS), browser tidak diperbolehkan secara langsung membuka koneksi socket TCP ke Port SMTP 587/25 atau mengirimkan pesan langsung ke jutaan email.
+                            </p>
+                        </div>
+
+                        <!-- Architecture Steps -->
+                        <div class="space-y-4 text-xs">
+                            <div class="p-4 bg-slate-950 rounded-lg border border-slate-800 space-y-2">
+                                <h4 class="font-semibold text-slate-200 text-sm text-indigo-400">1. Alur Arsitektur Produksi (Production Pipeline)</h4>
+                                <p class="text-slate-300"><strong>[Frontend / Web UI]</strong> ➔ (API Request / JSON) ➔ <strong>[Backend Service: Node.js / Python / PHP]</strong> ➔ (Job Queue / Redis) ➔ <strong>[Email API Provider: Resend / AWS SES / SendGrid]</strong> ➔ <strong>[Inbox Penerima]</strong></p>
+                            </div>
+
+                            <div class="p-4 bg-slate-950 rounded-lg border border-slate-800 space-y-2">
+                                <h4 class="font-semibold text-slate-200 text-sm text-emerald-400">2. Contoh Backend Node.js (Express + Resend API)</h4>
+                                <pre class="bg-slate-900 p-3 rounded font-mono text-[11px] text-slate-300 overflow-x-auto border border-slate-800">
+// server.js (Node.js Backend)
+const express = require('express');
+const { Resend } = require('resend');
+const resend = new Resend('re_YOUR_API_KEY');
+const app = express();
+app.use(express.json());
+
+app.post('/api/send-bulk', async (req, res) => {
+  const { contacts, subject, bodyHtml } = req.body;
+  
+  for (const recipient of contacts) {
+    await resend.emails.send({
+      from: 'MailBlast <perusahaan@domainanda.com>',
+      to: recipient.email,
+      subject: subject.replace('{{nama_depan}}', recipient.name),
+      html: bodyHtml
+    });
+  }
+  res.json({ success: true, message: 'Batch terkirim' });
+});
+
+app.listen(3000);</pre>
+                            </div>
+
+                            <div class="p-4 bg-slate-950 rounded-lg border border-slate-800 space-y-2">
+                                <h4 class="font-semibold text-slate-200 text-sm text-amber-400">3. Syarat Penting Agar Email Tidak Masuk Spam:</h4>
+                                <ul class="list-disc list-inside space-y-1 text-slate-300 pl-1">
+                                    <li><strong>SPF (Sender Policy Framework):</strong> Mengautentikasi server mana yang berhak mengirim atas nama domain Anda.</li>
+                                    <li><strong>DKIM (DomainKeys Identified Mail):</strong> Tanda tangan digital kriptografi untuk mencegah manipulasi email.</li>
+                                    <li><strong>DMARC:</strong> Kebijakan keamanan tambahan untuk verifikasi validitas email.</li>
+                                    <li><strong>Unsubscribe Link:</strong> Wajib menyertakan link pembatalan langganan di footer email.</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+    </div>
+
+    <!-- Add Contact Modal -->
+    <div id="modal-add-contact" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center hidden">
+        <div class="bg-slate-900 border border-slate-800 p-6 rounded-xl w-full max-w-md space-y-4">
+            <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+                <h3 class="font-semibold text-slate-200 text-sm">Tambah Kontak Baru</h3>
+                <button onclick="closeAddContactModal()" class="text-slate-400 hover:text-white"><i data-lucide="x" class="w-4 h-4"></i></button>
+            </div>
+            <form onsubmit="handleAddContact(event)" class="space-y-3 text-xs">
+                <div>
+                    <label class="block text-slate-400 mb-1">Nama Lengkap</label>
+                    <input type="text" id="input-contact-fn" required class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2 text-slate-200">
+                </div>
+                <div>
+                    <label class="block text-slate-400 mb-1">Alamat Email</label>
+                    <input type="email" id="input-contact-email" required class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2 text-slate-200">
+                </div>
+                <div>
+                    <label class="block text-slate-400 mb-1">Perusahaan / Organisasi</label>
+                    <input type="text" id="input-contact-company" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2 text-slate-200">
+                </div>
+                <div>
+                    <label class="block text-slate-400 mb-1">Tag / Kategori</label>
+                    <select id="input-contact-tag" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2 text-slate-200">
+                        <option value="Lead">Lead</option>
+                        <option value="VIP">VIP</option>
+                        <option value="Pelanggan">Pelanggan</option>
+                    </select>
+                </div>
+                <div class="flex justify-end gap-2 pt-2">
+                    <button type="button" onclick="closeAddContactModal()" class="bg-slate-800 px-3 py-1.5 rounded-lg text-slate-300">Batal</button>
+                    <button type="submit" class="bg-blue-600 px-3 py-1.5 rounded-lg text-white font-medium">Simpan Kontak</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Import CSV Modal -->
+    <div id="modal-import" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center hidden">
+        <div class="bg-slate-900 border border-slate-800 p-6 rounded-xl w-full max-w-md space-y-4">
+            <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+                <h3 class="font-semibold text-slate-200 text-sm">Impor Data Kontak (Format CSV)</h3>
+                <button onclick="closeImportModal()" class="text-slate-400 hover:text-white"><i data-lucide="x" class="w-4 h-4"></i></button>
+            </div>
+            <div class="space-y-3 text-xs">
+                <p class="text-slate-400">Tempelkan teks data CSV di bawah ini (Format: <code>nama,email,perusahaan,tag</code>):</p>
+                <textarea id="import-csv-text" rows="6" class="w-full font-mono text-xs bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-300" placeholder="Budi Santoso,budi@perusahaan.id,PT Maju Bersama,Lead
+Siti Rahma,siti@tech.co.id,Techcorp Indonesia,VIP"></textarea>
+                <div class="flex justify-end gap-2 pt-2">
+                    <button onclick="closeImportModal()" class="bg-slate-800 px-3 py-1.5 rounded-lg text-slate-300">Batal</button>
+                    <button onclick="processCSVImport()" class="bg-blue-600 px-3 py-1.5 rounded-lg text-white font-medium">Proses Impor</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification Container -->
+    <div id="toast-container" class="fixed bottom-5 right-5 z-50 space-y-2 pointer-events-none"></div>
+
+    <script src="./app.js"></script>
+</body>
+</html>
